@@ -19,7 +19,6 @@ media/
 db.sqlite3
 
 # Docker
-.dockerignore
 
 # Environment
 .env
