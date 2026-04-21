@@ -37,3 +37,5 @@ Thumbs.db
 
 # Node (pro budoucí build tools)
 node_modules/
+
+.claude/
