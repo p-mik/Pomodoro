@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Pomodoro — upupaepops.cz</title>
+  <style>
+    :root {
+      --bg: #fafaf7;
+      --fg: #1c1c1a;
+      --muted: #6b6b66;
+      --accent: #c14a3f;
+      --surface: #ffffff;
+      --border: rgba(0, 0, 0, 0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #161614;
+        --fg: #f2f2ee;
+        --muted: #9b9b95;
+        --accent: #e25c51;
+        --surface: #1f1f1d;
+        --border: rgba(255, 255, 255, 0.08);
+      }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+    }
+    .card {
+      max-width: 520px;
+      width: 100%;
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: 16px;
+      padding: 3rem 2.5rem;
+      text-align: center;
+    }
+    .tomato { width: 88px; height: 88px; margin: 0 auto 1.5rem; display: block; }
+    h1 { font-size: 28px; font-weight: 500; margin-bottom: 0.5rem; letter-spacing: -0.01em; }
+    .sub { color: var(--muted); font-size: 15px; margin-bottom: 2rem; }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      padding: 6px 14px;
+      border: 0.5px solid var(--border);
+      border-radius: 999px;
+      margin-bottom: 2rem;
+    }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .what {
+      text-align: left;
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .what h2 {
+      font-size: 13px; font-weight: 500; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;
+    }
+    .what ul { list-style: none; font-size: 14px; }
+    .what li { padding: 4px 0; color: var(--fg); }
+    .what li::before { content: "→ "; color: var(--accent); font-weight: 500; }
+    .footer { font-size: 13px; color: var(--muted); margin-top: 1rem; }
+    .footer a { color: var(--accent); text-decoration: none; border-bottom: 1px dotted var(--accent); }
+    @media (max-width: 480px) { .card { padding: 2rem 1.5rem; } h1 { font-size: 24px; } }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <svg class="tomato" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <ellipse cx="50" cy="58" rx="36" ry="32" fill="#c14a3f" />
+      <ellipse cx="38" cy="48" rx="8" ry="6" fill="#e57366" opacity="0.6" />
+      <path d="M50 26 Q42 18 32 22 Q38 28 40 32 Q44 28 50 28 Q56 28 60 32 Q62 28 68 22 Q58 18 50 26 Z" fill="#4a7c3a" />
+      <path d="M50 22 Q48 14 52 10 Q54 14 52 22 Z" fill="#3d6830" />
+    </svg>
+    <div class="status">
+      <span class="dot"></span>
+      <span>Ve výstavbě</span>
+    </div>
+    <h1>Pomodoro</h1>
+    <p class="sub">Osobní time-tracker s pomodoro technikou</p>
+    <div class="what">
+      <h2>Co tu brzy bude</h2>
+      <ul>
+        <li>Časovač s konfigurovatelnými intervaly</li>
+        <li>Notifikace na mobil i desktop</li>
+        <li>Statistiky, grafy a export</li>
+        <li>Instalace jako PWA</li>
+      </ul>
+    </div>
+    <p class="footer">
+      Součást <a href="https://upupaepops.cz">upupaepops.cz</a>
+    </p>
+  </main>
+</body>
+</html>
