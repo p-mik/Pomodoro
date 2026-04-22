@@ -32,14 +32,32 @@ function getCzechHolidays(year) {
   ]);
 }
 
-function getDayColor(dateStr) {
+function getDayBgColor(dateStr) {
   const date = new Date(dateStr);
-  const dow = date.getDay(); // 0=ne, 6=so
+  const dow = date.getDay();
   const holidays = getCzechHolidays(date.getFullYear());
-  if (holidays.has(dateStr)) return 'rgba(108, 117, 125, 0.6)';  // svátek — šedá
-  if (dow === 0 || dow === 6) return 'rgba(255, 193, 7, 0.7)';   // víkend — žlutá
-  return 'rgba(220, 53, 69, 0.7)';                                // pracovní den — červená
+  if (holidays.has(dateStr)) return 'rgba(108, 117, 125, 0.12)';
+  if (dow === 0 || dow === 6) return 'rgba(255, 193, 7, 0.18)';
+  return null;
 }
+
+// Chart.js plugin — barví pozadí sloupců (víkend/svátek)
+const columnBgPlugin = {
+  id: 'columnBg',
+  beforeDatasetsDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    const meta = chart.getDatasetMeta(0);
+    meta.data.forEach((bar, i) => {
+      const color = getDayBgColor(chart._dateKeys[i]);
+      if (!color) return;
+      const w = bar.width;
+      ctx.save();
+      ctx.fillStyle = color;
+      ctx.fillRect(bar.x - w / 2, chartArea.top, w, chartArea.bottom - chartArea.top);
+      ctx.restore();
+    });
+  },
+};
 
 function fmtTime(sec) {
   const h = Math.floor(sec / 3600);
@@ -81,14 +99,15 @@ async function loadDailyChart() {
 
     const dateKeys = Object.keys(days);
 
-    new Chart(document.getElementById('chart-daily'), {
+    const chart = new Chart(document.getElementById('chart-daily'), {
       type: 'bar',
+      plugins: [columnBgPlugin],
       data: {
         labels: dateKeys.map(fmtDate),
         datasets: [{
           label: 'Minut práce',
           data: Object.values(days),
-          backgroundColor: dateKeys.map(getDayColor),
+          backgroundColor: 'rgba(220, 53, 69, 0.7)',
           borderRadius: 4,
         }]
       },
@@ -116,6 +135,7 @@ async function loadDailyChart() {
         }
       }
     });
+    chart._dateKeys = dateKeys;
   } catch (e) {}
 }
 
