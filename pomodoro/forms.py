@@ -4,9 +4,9 @@ from django.contrib.auth.models import User
 
 
 class PrihlaseniForm(AuthenticationForm):
-    username = forms.EmailField(
-        label='E-mail',
-        widget=forms.EmailInput(attrs={'autofocus': True, 'class': 'form-control', 'placeholder': 'vas@email.cz'}),
+    username = forms.CharField(
+        label='Uživatelské jméno nebo e-mail',
+        widget=forms.TextInput(attrs={'autofocus': True, 'class': 'form-control', 'placeholder': 'jméno nebo vas@email.cz'}),
     )
     password = forms.CharField(
         label='Heslo',
