@@ -120,7 +120,7 @@ def settings_get(request):
 
 
 @login_required
-@require_http_methods(["PUT"])
+@require_http_methods(["POST"])
 def settings_update(request):
     data = json.loads(request.body)
     s = request.user.settings

@@ -224,7 +224,7 @@ async function saveSettings() {
   };
   try {
     const resp = await fetch('/api/settings/update/', {
-      method: 'PUT',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
       body: JSON.stringify(payload),
     });
