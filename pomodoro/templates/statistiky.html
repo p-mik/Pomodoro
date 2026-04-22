@@ -43,11 +43,19 @@
     <div class="col-md-8">
       <div class="card">
         <div class="card-body">
-          <h6 class="card-title text-muted">Posledních 30 dní</h6>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="card-title text-muted mb-0">Přehled</h6>
+            <div class="btn-group btn-group-sm" id="period-switcher">
+              <button class="btn btn-outline-secondary active" data-days="7">Týden</button>
+              <button class="btn btn-outline-secondary" data-days="30">Měsíc</button>
+              <button class="btn btn-outline-secondary" data-days="91">Kvartál</button>
+              <button class="btn btn-outline-secondary" data-days="365">Rok</button>
+            </div>
+          </div>
           <canvas id="chart-daily" height="120"></canvas>
           <div class="d-flex gap-3 mt-2" style="font-size: 12px; color: #6c757d;">
-            <span><span style="display:inline-block;width:12px;height:12px;background:rgba(255,193,7,0.35);border:1px solid rgba(255,193,7,0.6);border-radius:2px;margin-right:4px;"></span>víkend</span>
-            <span><span style="display:inline-block;width:12px;height:12px;background:rgba(108,117,125,0.2);border:1px solid rgba(108,117,125,0.4);border-radius:2px;margin-right:4px;"></span>svátek</span>
+            <span><span style="display:inline-block;width:12px;height:12px;background:rgba(255,193,7,0.12);border:1px solid rgba(255,193,7,0.4);border-radius:2px;margin-right:4px;"></span>víkend</span>
+            <span><span style="display:inline-block;width:12px;height:12px;background:rgba(108,117,125,0.08);border:1px solid rgba(108,117,125,0.3);border-radius:2px;margin-right:4px;"></span>svátek</span>
           </div>
         </div>
       </div>

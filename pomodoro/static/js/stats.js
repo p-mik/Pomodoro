@@ -13,7 +13,15 @@ function getEaster(year) {
   const m = Math.floor((a + 11 * h + 22 * l) / 451);
   const month = Math.floor((h + l - 7 * m + 114) / 31);
   const day = ((h + l - 7 * m + 114) % 31) + 1;
-  return new Date(year, month - 1, day);
+  return new Date(year, month - 1, day); // lokální čas
+}
+
+// Formátuje Date na "YYYY-MM-DD" v lokálním čase (bez UTC posunu)
+function localDateStr(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 // Česká státní svátky (pevné datumy + Velký pátek + Velikonoční pondělí)
@@ -29,17 +37,23 @@ function getCzechHolidays(year) {
   const easterMon = new Date(easter); easterMon.setDate(easter.getDate() + 1);
   return new Set([
     ...fixed,
-    goodFriday.toISOString().slice(0, 10),
-    easterMon.toISOString().slice(0, 10),
+    localDateStr(goodFriday),
+    localDateStr(easterMon),
   ]);
 }
 
+// Parsuje "YYYY-MM-DD" jako lokální datum (ne UTC) — fix timezone bugu
+function parseLocalDate(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
 function getDayBgColor(dateStr) {
-  const date = new Date(dateStr);
+  const date = parseLocalDate(dateStr);
   const dow = date.getDay();
   const holidays = getCzechHolidays(date.getFullYear());
-  if (holidays.has(dateStr)) return 'rgba(108, 117, 125, 0.12)';
-  if (dow === 0 || dow === 6) return 'rgba(255, 193, 7, 0.18)';
+  if (holidays.has(dateStr)) return 'rgba(108, 117, 125, 0.08)';
+  if (dow === 0 || dow === 6) return 'rgba(255, 193, 7, 0.12)';
   return null;
 }
 
@@ -47,7 +61,7 @@ function getDayBgColor(dateStr) {
 const columnBgPlugin = {
   id: 'columnBg',
   beforeDatasetsDraw(chart) {
-    const { ctx, chartArea, scales } = chart;
+    const { ctx, chartArea } = chart;
     const meta = chart.getDatasetMeta(0);
     meta.data.forEach((bar, i) => {
       const color = getDayBgColor(chart._dateKeys[i]);
@@ -69,7 +83,7 @@ function fmtTime(sec) {
 }
 
 function fmtDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short' });
+  return parseLocalDate(dateStr).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short' });
 }
 
 async function loadKpi() {
@@ -85,21 +99,25 @@ async function loadKpi() {
   } catch (e) {}
 }
 
-async function loadDailyChart() {
+let dailyChart = null;
+
+async function loadDailyChart(days = 7) {
+  if (dailyChart) { dailyChart.destroy(); dailyChart = null; }
+
   try {
-    const r = await fetch('/api/stats/daily-by-tag/?days=30');
+    const r = await fetch(`/api/stats/daily-by-tag/?days=${days}`);
     const d = await r.json();
 
     const dateKeys = [];
-    for (let i = 29; i >= 0; i--) {
+    for (let i = days - 1; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      dateKeys.push(date.toISOString().slice(0, 10));
+      dateKeys.push(localDateStr(date));
     }
 
     // Collect all tags in order of first appearance
     const tagOrder = [];
-    const tagMeta = {}; // id/null → {label, barva}
+    const tagMeta = {};
     d.data.forEach(row => {
       const key = row.tag_id ?? 'none';
       if (!tagMeta[key]) {
@@ -108,7 +126,7 @@ async function loadDailyChart() {
       }
     });
 
-    // Build per-tag data map: tagKey → { day → minutes }
+    // Build per-tag data map
     const tagDays = {};
     tagOrder.forEach(k => {
       tagDays[k] = {};
@@ -127,7 +145,6 @@ async function loadDailyChart() {
       stack: 'work',
     }));
 
-    // Fallback: if no tag data at all, show a neutral dataset so chart renders
     if (datasets.length === 0) {
       datasets.push({
         label: 'Minut práce',
@@ -138,7 +155,9 @@ async function loadDailyChart() {
       });
     }
 
-    const chart = new Chart(document.getElementById('chart-daily'), {
+    const maxTicks = days <= 7 ? 7 : days <= 30 ? 10 : 13;
+
+    dailyChart = new Chart(document.getElementById('chart-daily'), {
       type: 'bar',
       plugins: [columnBgPlugin],
       data: {
@@ -152,7 +171,7 @@ async function loadDailyChart() {
             callbacks: {
               title: ctx => {
                 const key = dateKeys[ctx[0].dataIndex];
-                const date = new Date(key);
+                const date = parseLocalDate(key);
                 const holidays = getCzechHolidays(date.getFullYear());
                 const dow = date.getDay();
                 const label = date.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -165,12 +184,12 @@ async function loadDailyChart() {
           }
         },
         scales: {
-          x: { stacked: true, ticks: { maxRotation: 45 } },
+          x: { stacked: true, ticks: { maxRotation: 45, maxTicksLimit: maxTicks } },
           y: { stacked: true, beginAtZero: true, title: { display: true, text: 'min' } },
         }
       }
     });
-    chart._dateKeys = dateKeys;
+    dailyChart._dateKeys = dateKeys;
   } catch (e) {}
 }
 
@@ -259,7 +278,15 @@ async function loadSessions() {
 
 document.addEventListener('DOMContentLoaded', () => {
   loadKpi();
-  loadDailyChart();
+  loadDailyChart(7);
   loadTagChart();
   loadSessions();
+
+  document.querySelectorAll('#period-switcher button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#period-switcher button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      loadDailyChart(parseInt(btn.dataset.days));
+    });
+  });
 });
