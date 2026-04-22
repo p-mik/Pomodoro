@@ -171,3 +171,85 @@ def push_heartbeat(request):
         device_id=device_id,
     ).update(last_heartbeat=timezone.now())
     return JsonResponse({'ok': True})
+
+
+# --- Statistiky ---
+
+import csv
+from django.http import HttpResponse
+from .services import get_daily_stats, get_tag_stats, get_kpi
+
+
+@login_required
+@require_http_methods(["GET"])
+def stats_daily(request):
+    days = int(request.GET.get('days', 30))
+    data = get_daily_stats(request.user, days=days)
+    return JsonResponse({
+        'data': [
+            {
+                'day': str(r['day']),
+                'total_sec': r['total_sec'] or 0,
+                'count': r['count'],
+            }
+            for r in data
+        ]
+    })
+
+
+@login_required
+@require_http_methods(["GET"])
+def stats_tags(request):
+    from_date = request.GET.get('from')
+    to_date = request.GET.get('to')
+    data = get_tag_stats(request.user, from_date=from_date, to_date=to_date)
+    return JsonResponse({
+        'data': [
+            {
+                'tag': r['tag__nazev'] or 'bez tagu',
+                'barva': r['tag__barva'] or '#6c757d',
+                'total_sec': r['total_sec'] or 0,
+                'count': r['count'],
+            }
+            for r in data
+        ]
+    })
+
+
+@login_required
+@require_http_methods(["GET"])
+def stats_kpi(request):
+    return JsonResponse(get_kpi(request.user))
+
+
+@login_required
+@require_http_methods(["GET"])
+def export_csv(request):
+    qs = Pomodoro.objects.filter(
+        user=request.user, ended_at__isnull=False
+    ).select_related('tag').order_by('-started_at')
+
+    from_date = request.GET.get('from')
+    to_date = request.GET.get('to')
+    if from_date:
+        qs = qs.filter(started_at__date__gte=from_date)
+    if to_date:
+        qs = qs.filter(started_at__date__lte=to_date)
+
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename="pomodoro-export.csv"'
+    response.write('\ufeff')  # BOM pro Excel
+
+    writer = csv.writer(response)
+    writer.writerow(['Datum', 'Začátek', 'Konec', 'Plánováno (min)', 'Skutečně (min)', 'Tag', 'Dokončeno'])
+    for p in qs:
+        writer.writerow([
+            p.started_at.strftime('%Y-%m-%d'),
+            p.started_at.strftime('%H:%M'),
+            p.ended_at.strftime('%H:%M') if p.ended_at else '',
+            round(p.planned_duration_sec / 60, 1),
+            round((p.actual_duration_sec or 0) / 60, 1),
+            p.tag.nazev if p.tag else '',
+            'Ano' if p.completed_normally else 'Ne',
+        ])
+    return response

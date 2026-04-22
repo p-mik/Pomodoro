@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Statistiky — Pomodoro{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">Statistiky</h2>
+
+  <!-- KPI karty -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card text-center">
+        <div class="card-body">
+          <div class="text-muted small mb-1">Dnes</div>
+          <div class="fs-3 fw-bold" id="kpi-today-count">—</div>
+          <div class="text-muted small" id="kpi-today-time">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center">
+        <div class="card-body">
+          <div class="text-muted small mb-1">Tento týden</div>
+          <div class="fs-3 fw-bold" id="kpi-week-count">—</div>
+          <div class="text-muted small" id="kpi-week-time">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center">
+        <div class="card-body">
+          <div class="text-muted small mb-1">Tento měsíc</div>
+          <div class="fs-3 fw-bold" id="kpi-month-count">—</div>
+          <div class="text-muted small" id="kpi-month-time">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grafy -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-title text-muted">Posledních 30 dní</h6>
+          <canvas id="chart-daily" height="120"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-title text-muted">Podle tagů</h6>
+          <canvas id="chart-tags"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabulka -->
+  <div class="card">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="card-title text-muted mb-0">Historie</h6>
+        <a href="{% url 'api_export_csv' %}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-download"></i> Export CSV
+        </a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>Datum</th>
+              <th>Začátek</th>
+              <th>Délka</th>
+              <th>Tag</th>
+              <th>Dokončeno</th>
+            </tr>
+          </thead>
+          <tbody id="sessions-table">
+            <tr><td colspan="5" class="text-center text-muted">Načítám…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/stats.js' %}"></script>
+{% endblock %}

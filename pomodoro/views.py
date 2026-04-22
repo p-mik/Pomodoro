@@ -50,3 +50,8 @@ def odhlaseni(request):
 @login_required
 def home(request):
     return render(request, 'home.html')
+
+
+@login_required
+def statistiky(request):
+    return render(request, 'statistiky.html')

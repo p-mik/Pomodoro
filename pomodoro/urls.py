@@ -25,4 +25,13 @@ urlpatterns = [
     # API — Push
     path('api/push/subscribe/', api.push_subscribe, name='api_push_subscribe'),
     path('api/push/heartbeat/', api.push_heartbeat, name='api_push_heartbeat'),
+
+    # API — Statistiky
+    path('api/stats/daily/', api.stats_daily, name='api_stats_daily'),
+    path('api/stats/tags/', api.stats_tags, name='api_stats_tags'),
+    path('api/stats/kpi/', api.stats_kpi, name='api_stats_kpi'),
+    path('api/stats/export.csv', api.export_csv, name='api_export_csv'),
+
+    # Statistiky stránka
+    path('statistiky/', views.statistiky, name='statistiky'),
 ]
