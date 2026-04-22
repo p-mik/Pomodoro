@@ -379,6 +379,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else {
     await syncActivePomodoro();
   }
+  if (state.mode === 'idle') updateUI();
   loadTodayStats();
 
   document.getElementById('btn-start').addEventListener('click', startPomodoro);
