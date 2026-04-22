@@ -237,8 +237,35 @@ async function startBreak(actualSec, completedNormally) {
   state.endsAt = Date.now() + breakSec * 1000;
   state.overflowSec = 0;
 
+  localStorage.setItem('pomodoro_break', JSON.stringify({
+    breakEndsAt: state.endsAt,
+    pomodoroCount: state.pomodoroCount,
+  }));
+
   updateUI();
   startTick();
+}
+
+function clearBreakStorage() {
+  localStorage.removeItem('pomodoro_break');
+}
+
+function syncBreakFromStorage() {
+  try {
+    const raw = localStorage.getItem('pomodoro_break');
+    if (!raw) return false;
+    const { breakEndsAt, pomodoroCount } = JSON.parse(raw);
+    if (Date.now() >= breakEndsAt) {
+      clearBreakStorage();
+      return false;
+    }
+    state.mode = 'break';
+    state.endsAt = breakEndsAt;
+    state.pomodoroCount = pomodoroCount;
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 async function saveSettings() {
@@ -273,6 +300,7 @@ function onPomodoroExpired() {
 
 function onBreakExpired() {
   stopTick();
+  clearBreakStorage();
   state.pomodoroCount++;
   state.mode = 'idle';
   state.endsAt = null;
@@ -343,7 +371,14 @@ async function loadTodayStats() {
 document.addEventListener('DOMContentLoaded', async () => {
   await loadSettings();
   await loadTags();
-  await syncActivePomodoro();
+
+  const breakRestored = syncBreakFromStorage();
+  if (breakRestored) {
+    updateUI();
+    startTick();
+  } else {
+    await syncActivePomodoro();
+  }
   loadTodayStats();
 
   document.getElementById('btn-start').addEventListener('click', startPomodoro);
@@ -394,6 +429,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('btn-skip-break').addEventListener('click', () => {
     stopTick();
+    clearBreakStorage();
     state.pomodoroCount++;
     state.mode = 'idle';
     state.endsAt = null;
