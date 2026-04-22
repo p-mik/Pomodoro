@@ -1,0 +1,22 @@
+name: Deploy Pomodoro
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy na server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/pomodoro
+            git pull
+            docker compose build --no-cache web
+            docker compose up -d
+            docker compose exec -T web python manage.py migrate
