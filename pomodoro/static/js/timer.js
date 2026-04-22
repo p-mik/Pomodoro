@@ -5,10 +5,11 @@ const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 // --- Stav aplikace ---
 
 const state = {
-  mode: 'idle',       // 'idle' | 'running' | 'overflow' | 'break'
+  mode: 'idle',       // 'idle' | 'running' | 'paused' | 'overflow' | 'break'
   pomodoroId: null,
   startedAt: null,    // ms timestamp
   endsAt: null,       // ms timestamp — plánovaný konec pomodora
+  pausedAt: null,     // ms timestamp — kdy byla spuštěna pauza
   plannedSec: null,
   pomodoroCount: 0,   // počet dokončených pomodor v cyklu
   overflowSec: 0,
@@ -79,6 +80,7 @@ function updateUI() {
 
   document.getElementById('btn-idle').style.display = 'none';
   document.getElementById('btn-running').style.display = 'none';
+  document.getElementById('btn-paused').style.display = 'none';
   document.getElementById('btn-overflow').style.display = 'none';
   document.getElementById('btn-break').style.display = 'none';
   overflowEl.style.display = 'none';
@@ -98,6 +100,15 @@ function updateUI() {
       counterEl.textContent = `Pomodoro ${pos} / ${settings.long_break_every}`;
       document.getElementById('btn-running').style.display = '';
       break;
+
+    case 'paused': {
+      const remaining = Math.ceil((state.endsAt - state.pausedAt) / 1000);
+      timerEl.textContent = formatTime(remaining);
+      timerEl.className = 'display-1 fw-bold mb-1 text-warning';
+      counterEl.textContent = `Pomodoro ${pos} / ${settings.long_break_every} — pozastaveno`;
+      document.getElementById('btn-paused').style.display = '';
+      break;
+    }
 
     case 'overflow':
       timerEl.textContent = formatTime(state.plannedSec) + ' ✓';
@@ -197,6 +208,22 @@ async function stopPomodoro(actualSec, completedNormally) {
     });
   } catch (e) {}
   state.pomodoroId = null;
+}
+
+function pauseTimer() {
+  stopTick();
+  state.pausedAt = Date.now();
+  state.mode = 'paused';
+  updateUI();
+}
+
+function resumeTimer() {
+  const pausedDuration = Date.now() - state.pausedAt;
+  state.endsAt += pausedDuration;
+  state.pausedAt = null;
+  state.mode = 'running';
+  updateUI();
+  startTick();
 }
 
 async function startBreak(actualSec, completedNormally) {
@@ -324,6 +351,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-stop').addEventListener('click', async () => {
     const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
     stopTick();
+    await stopPomodoro(elapsed, false);
+    state.mode = 'idle';
+    updateUI();
+    loadTodayStats();
+  });
+
+  document.getElementById('btn-pause').addEventListener('click', pauseTimer);
+  document.getElementById('btn-resume').addEventListener('click', resumeTimer);
+
+  document.getElementById('btn-stop-paused').addEventListener('click', async () => {
+    const elapsed = Math.floor((state.pausedAt - state.startedAt) / 1000);
+    state.pausedAt = null;
     await stopPomodoro(elapsed, false);
     state.mode = 'idle';
     updateUI();
