@@ -109,7 +109,7 @@ def pomodoro_list(request):
 @login_required
 @require_http_methods(["GET"])
 def settings_get(request):
-    s = request.user.settings
+    s, _ = UserSettings.objects.get_or_create(user=request.user)
     return JsonResponse({
         'work_duration_sec': s.work_duration_sec,
         'short_break_sec': s.short_break_sec,
@@ -123,7 +123,7 @@ def settings_get(request):
 @require_http_methods(["POST"])
 def settings_update(request):
     data = json.loads(request.body)
-    s = request.user.settings
+    s, _ = UserSettings.objects.get_or_create(user=request.user)
     for field in ['work_duration_sec', 'short_break_sec', 'long_break_sec', 'long_break_every']:
         if field in data:
             setattr(s, field, int(data[field]))
