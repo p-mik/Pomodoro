@@ -173,6 +173,14 @@ def push_heartbeat(request):
     return JsonResponse({'ok': True})
 
 
+@login_required
+@require_http_methods(["POST"])
+def pomodoro_delete(request, pk):
+    p = get_object_or_404(Pomodoro, id=pk, user=request.user)
+    p.delete()
+    return JsonResponse({'ok': True})
+
+
 # --- Statistiky ---
 
 import csv

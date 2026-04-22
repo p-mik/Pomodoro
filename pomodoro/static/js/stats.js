@@ -1,5 +1,7 @@
 'use strict';
 
+const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+
 // Výpočet Velikonoc (Anonymní Gregoriánský algoritmus)
 function getEaster(year) {
   const a = year % 19, b = Math.floor(year / 100), c = year % 100;
@@ -171,6 +173,20 @@ async function loadTagChart() {
   } catch (e) {}
 }
 
+async function deleteSession(id, row) {
+  if (!confirm('Smazat tuto session?')) return;
+  try {
+    const r = await fetch(`/api/pomodoro/${id}/delete/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': CSRF },
+    });
+    if (r.ok) {
+      row.remove();
+      loadKpi();
+    }
+  } catch (e) {}
+}
+
 async function loadSessions() {
   try {
     const r = await fetch('/api/pomodoro/');
@@ -178,7 +194,7 @@ async function loadSessions() {
     const tbody = document.getElementById('sessions-table');
 
     if (d.results.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Žádné záznamy</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Žádné záznamy</td></tr>';
       return;
     }
 
@@ -191,14 +207,20 @@ async function loadSessions() {
       const done = p.completed_normally
         ? '<span class="badge bg-success">Ano</span>'
         : '<span class="badge bg-secondary">Ne</span>';
-      return `<tr>
+      return `<tr data-id="${p.id}">
         <td>${dateStr}</td>
         <td>${timeStr}</td>
         <td>${durMin} min</td>
         <td>${tag}</td>
         <td>${done}</td>
+        <td><button class="btn btn-outline-danger btn-sm py-0 btn-delete" title="Smazat"><i class="bi bi-trash"></i></button></td>
       </tr>`;
     }).join('');
+
+    tbody.querySelectorAll('.btn-delete').forEach(btn => {
+      const row = btn.closest('tr');
+      btn.addEventListener('click', () => deleteSession(row.dataset.id, row));
+    });
   } catch (e) {}
 }
 

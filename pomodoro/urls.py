@@ -14,6 +14,7 @@ urlpatterns = [
     path('api/pomodoro/active/', api.pomodoro_active, name='api_pomodoro_active'),
     path('api/pomodoro/', api.pomodoro_list, name='api_pomodoro_list'),
     path('api/pomodoro/<int:pk>/stop/', api.pomodoro_stop, name='api_pomodoro_stop'),
+    path('api/pomodoro/<int:pk>/delete/', api.pomodoro_delete, name='api_pomodoro_delete'),
 
     # API — Settings
     path('api/settings/', api.settings_get, name='api_settings_get'),
