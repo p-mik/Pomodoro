@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Tagy — Pomodoro{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 640px;">
+  <h2 class="mb-4">Tagy</h2>
+
+  <!-- Přidat tag -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h6 class="card-title text-muted">Přidat tag</h6>
+      <form method="post" class="row g-2 align-items-end">
+        {% csrf_token %}
+        <div class="col-auto">
+          {{ form.barva }}
+        </div>
+        <div class="col">
+          {{ form.nazev }}
+          {% if form.nazev.errors %}
+            <div class="invalid-feedback d-block">{{ form.nazev.errors|join:", " }}</div>
+          {% endif %}
+        </div>
+        <div class="col-auto">
+          <button type="submit" class="btn btn-danger">Přidat</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Seznam tagů -->
+  {% if tagy %}
+  <ul class="list-group">
+    {% for tag in tagy %}
+    <li class="list-group-item d-flex align-items-center gap-3">
+      <span style="display:inline-block;width:20px;height:20px;background:{{ tag.barva }};border-radius:4px;flex-shrink:0;"></span>
+      <span class="flex-grow-1 fw-medium">{{ tag.nazev }}</span>
+      <a href="{% url 'tag_update' tag.pk %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-pencil"></i> Upravit
+      </a>
+      <a href="{% url 'tag_delete' tag.pk %}" class="btn btn-outline-danger btn-sm">
+        <i class="bi bi-trash"></i> Smazat
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-muted text-center py-4">Zatím žádné tagy. Přidej první výše.</p>
+  {% endif %}
+</div>
+{% endblock %}

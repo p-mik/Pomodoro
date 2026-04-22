@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Smazat tag — Pomodoro{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 480px;">
+  <h2 class="mb-4">Smazat tag</h2>
+  <div class="card border-danger">
+    <div class="card-body">
+      <p>Opravdu chceš smazat tag <strong>{{ object.nazev }}</strong>?</p>
+      <p class="text-muted small">Pomodoro sessions s tímto tagem přijdou o přiřazení tagu.</p>
+      <form method="post" class="d-flex gap-2">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Smazat</button>
+        <a href="{% url 'tagy' %}" class="btn btn-outline-secondary">Zrušit</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

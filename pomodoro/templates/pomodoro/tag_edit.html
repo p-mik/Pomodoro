@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Upravit tag — Pomodoro{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 480px;">
+  <h2 class="mb-4">Upravit tag</h2>
+  <div class="card">
+    <div class="card-body">
+      <form method="post" class="row g-3">
+        {% csrf_token %}
+        <div class="col-12 d-flex gap-3 align-items-end">
+          <div>
+            <label class="form-label">{{ form.barva.label }}</label>
+            {{ form.barva }}
+          </div>
+          <div class="flex-grow-1">
+            <label class="form-label">{{ form.nazev.label }}</label>
+            {{ form.nazev }}
+            {% if form.nazev.errors %}
+              <div class="invalid-feedback d-block">{{ form.nazev.errors|join:", " }}</div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-12 d-flex gap-2">
+          <button type="submit" class="btn btn-danger">Uložit</button>
+          <a href="{% url 'tagy' %}" class="btn btn-outline-secondary">Zrušit</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

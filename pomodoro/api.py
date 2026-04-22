@@ -185,7 +185,7 @@ def pomodoro_delete(request, pk):
 
 import csv
 from django.http import HttpResponse
-from .services import get_daily_stats, get_tag_stats, get_kpi
+from .services import get_daily_stats, get_tag_stats, get_kpi, get_daily_stats_by_tag
 
 
 @login_required
@@ -222,6 +222,23 @@ def stats_tags(request):
             for r in data
         ]
     })
+
+
+@login_required
+@require_http_methods(["GET"])
+def stats_daily_by_tag(request):
+    days = int(request.GET.get('days', 30))
+    data = get_daily_stats_by_tag(request.user, days=days)
+    return JsonResponse({'data': [
+        {
+            'day': str(r['day']),
+            'tag_id': r['tag__id'],
+            'tag': r['tag__nazev'] or 'bez tagu',
+            'barva': r['tag__barva'] or '#6c757d',
+            'total_sec': r['total_sec'] or 0,
+        }
+        for r in data
+    ]})
 
 
 @login_required

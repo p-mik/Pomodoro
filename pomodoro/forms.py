@@ -1,6 +1,18 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
+from .models import Tag
+
+
+class TagForm(forms.ModelForm):
+    class Meta:
+        model = Tag
+        fields = ['nazev', 'barva']
+        labels = {'nazev': 'Název', 'barva': 'Barva'}
+        widgets = {
+            'nazev': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Název tagu'}),
+            'barva': forms.TextInput(attrs={'class': 'form-control form-control-color', 'type': 'color'}),
+        }
 
 
 class PrihlaseniForm(AuthenticationForm):

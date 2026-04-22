@@ -34,6 +34,19 @@ def get_tag_stats(user, from_date=None, to_date=None):
     )
 
 
+def get_daily_stats_by_tag(user, days=30):
+    since = timezone.now() - timedelta(days=days)
+    qs = (
+        Pomodoro.objects
+        .filter(user=user, ended_at__isnull=False, started_at__gte=since)
+        .annotate(day=TruncDate('started_at'))
+        .values('day', 'tag__id', 'tag__nazev', 'tag__barva')
+        .annotate(total_sec=Sum('actual_duration_sec'))
+        .order_by('day')
+    )
+    return list(qs)
+
+
 def get_kpi(user):
     now = timezone.now()
     today = now.date()

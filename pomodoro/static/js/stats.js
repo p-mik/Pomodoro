@@ -87,35 +87,67 @@ async function loadKpi() {
 
 async function loadDailyChart() {
   try {
-    const r = await fetch('/api/stats/daily/?days=30');
+    const r = await fetch('/api/stats/daily-by-tag/?days=30');
     const d = await r.json();
 
-    const days = {};
+    const dateKeys = [];
     for (let i = 29; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      const key = date.toISOString().slice(0, 10);
-      days[key] = 0;
+      dateKeys.push(date.toISOString().slice(0, 10));
     }
-    d.data.forEach(row => { days[row.day] = Math.round(row.total_sec / 60); });
 
-    const dateKeys = Object.keys(days);
+    // Collect all tags in order of first appearance
+    const tagOrder = [];
+    const tagMeta = {}; // id/null → {label, barva}
+    d.data.forEach(row => {
+      const key = row.tag_id ?? 'none';
+      if (!tagMeta[key]) {
+        tagMeta[key] = { label: row.tag, barva: row.barva };
+        tagOrder.push(key);
+      }
+    });
+
+    // Build per-tag data map: tagKey → { day → minutes }
+    const tagDays = {};
+    tagOrder.forEach(k => {
+      tagDays[k] = {};
+      dateKeys.forEach(day => { tagDays[k][day] = 0; });
+    });
+    d.data.forEach(row => {
+      const key = row.tag_id ?? 'none';
+      tagDays[key][row.day] = Math.round(row.total_sec / 60);
+    });
+
+    const datasets = tagOrder.map(k => ({
+      label: tagMeta[k].label,
+      data: dateKeys.map(day => tagDays[k][day]),
+      backgroundColor: tagMeta[k].barva,
+      borderRadius: 2,
+      stack: 'work',
+    }));
+
+    // Fallback: if no tag data at all, show a neutral dataset so chart renders
+    if (datasets.length === 0) {
+      datasets.push({
+        label: 'Minut práce',
+        data: dateKeys.map(() => 0),
+        backgroundColor: 'rgba(220, 53, 69, 0.7)',
+        borderRadius: 4,
+        stack: 'work',
+      });
+    }
 
     const chart = new Chart(document.getElementById('chart-daily'), {
       type: 'bar',
       plugins: [columnBgPlugin],
       data: {
         labels: dateKeys.map(fmtDate),
-        datasets: [{
-          label: 'Minut práce',
-          data: Object.values(days),
-          backgroundColor: 'rgba(220, 53, 69, 0.7)',
-          borderRadius: 4,
-        }]
+        datasets,
       },
       options: {
         plugins: {
-          legend: { display: false },
+          legend: { display: tagOrder.length > 1, position: 'bottom' },
           tooltip: {
             callbacks: {
               title: ctx => {
@@ -127,13 +159,14 @@ async function loadDailyChart() {
                 if (holidays.has(key)) return label + ' 🎉';
                 if (dow === 0 || dow === 6) return label + ' 🌿';
                 return label;
-              }
+              },
+              label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} min`,
             }
           }
         },
         scales: {
-          y: { beginAtZero: true, title: { display: true, text: 'min' } },
-          x: { ticks: { maxRotation: 45 } }
+          x: { stacked: true, ticks: { maxRotation: 45 } },
+          y: { stacked: true, beginAtZero: true, title: { display: true, text: 'min' } },
         }
       }
     });

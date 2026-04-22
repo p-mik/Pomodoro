@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views, api
+from .views import TagListView, TagUpdateView, TagDeleteView
 
 urlpatterns = [
     # Views
@@ -29,10 +30,16 @@ urlpatterns = [
 
     # API — Statistiky
     path('api/stats/daily/', api.stats_daily, name='api_stats_daily'),
+    path('api/stats/daily-by-tag/', api.stats_daily_by_tag, name='api_stats_daily_by_tag'),
     path('api/stats/tags/', api.stats_tags, name='api_stats_tags'),
     path('api/stats/kpi/', api.stats_kpi, name='api_stats_kpi'),
     path('api/stats/export.csv', api.export_csv, name='api_export_csv'),
 
     # Statistiky stránka
     path('statistiky/', views.statistiky, name='statistiky'),
+
+    # Tagy
+    path('tagy/', TagListView.as_view(), name='tagy'),
+    path('tagy/<int:pk>/upravit/', TagUpdateView.as_view(), name='tag_update'),
+    path('tagy/<int:pk>/smazat/', TagDeleteView.as_view(), name='tag_delete'),
 ]
