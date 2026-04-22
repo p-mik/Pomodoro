@@ -1,14 +1,144 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Přehled — Pomodoro{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Dobrý den, {{ request.user.username }}</h1>
+<div class="row justify-content-center">
+  <div class="col-md-6 col-lg-5">
 
-<div class="card border-0 bg-light">
-  <div class="card-body text-center py-5">
-    <div class="fs-1 mb-3">⏳</div>
-    <h5 class="text-muted">Timer UI — přijde ve Fázi 3</h5>
+    <!-- Timer card -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-body text-center py-5">
+
+        <!-- Tag select + settings -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <select id="tag-select" class="form-select form-select-sm w-auto">
+            <option value="">— bez tagu —</option>
+          </select>
+          <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#settingsModal" title="Nastavení">
+            <i class="bi bi-gear"></i>
+          </button>
+        </div>
+
+        <!-- Timer display -->
+        <div id="timer-display" class="display-1 fw-bold mb-1">25:00</div>
+        <div id="overflow-display" class="fs-4 text-secondary mb-3" style="display:none;">+00:00</div>
+        <div id="pomodoro-counter" class="text-muted small mb-4">Pomodoro 1 / 4</div>
+
+        <!-- IDLE buttons -->
+        <div id="btn-idle">
+          <button class="btn btn-danger btn-lg px-5" id="btn-start">
+            <i class="bi bi-play-fill"></i> Spustit
+          </button>
+        </div>
+
+        <!-- RUNNING buttons -->
+        <div id="btn-running" style="display:none;">
+          <button class="btn btn-outline-danger btn-lg px-4" id="btn-stop">
+            <i class="bi bi-stop-fill"></i> Stop
+          </button>
+        </div>
+
+        <!-- OVERFLOW buttons -->
+        <div id="btn-overflow" style="display:none;">
+          <button class="btn btn-success btn-lg px-4 me-2" id="btn-start-break">
+            <i class="bi bi-cup-hot"></i> Začít pauzu
+          </button>
+          <button class="btn btn-outline-secondary btn-lg" id="btn-stop-overflow" title="Zastavit">
+            <i class="bi bi-stop-fill"></i>
+          </button>
+        </div>
+
+        <!-- BREAK buttons -->
+        <div id="btn-break" style="display:none;">
+          <div class="text-muted mb-3">Přestávka</div>
+          <button class="btn btn-outline-secondary btn-lg" id="btn-skip-break">
+            <i class="bi bi-skip-forward-fill"></i> Přeskočit
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Dnešní přehled -->
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h6 class="card-title text-muted mb-3">Dnes</h6>
+        <div class="row text-center">
+          <div class="col">
+            <div class="fs-3 fw-bold" id="today-count">0</div>
+            <div class="text-muted small">pomodor</div>
+          </div>
+          <div class="col">
+            <div class="fs-3 fw-bold" id="today-minutes">0</div>
+            <div class="text-muted small">minut</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
+
+<!-- Overflow modal -->
+<div class="modal fade" id="overflowModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">Přičíst čas navíc?</h5>
+      </div>
+      <div class="modal-body">
+        <p>Dokončil jsi <strong id="modal-planned"></strong> + <strong id="modal-overflow" class="text-secondary"></strong> navíc.</p>
+        <p class="mb-0">Chceš přičíst ten čas navíc k záznamu?</p>
+      </div>
+      <div class="modal-footer border-0">
+        <button class="btn btn-outline-secondary" id="btn-no-overflow">Jen <span id="modal-planned-btn"></span></button>
+        <button class="btn btn-primary" id="btn-yes-overflow">Celých <span id="modal-total-btn"></span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Settings modal -->
+<div class="modal fade" id="settingsModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-gear me-2"></i>Nastavení</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Délka pomodora (min)</label>
+          <input type="number" class="form-control" id="s-work" min="1" max="120" value="25">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Krátká přestávka (min)</label>
+          <input type="number" class="form-control" id="s-short" min="1" max="60" value="5">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Dlouhá přestávka (min)</label>
+          <input type="number" class="form-control" id="s-long" min="1" max="120" value="15">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Dlouhá přestávka po každých N pomodorech</label>
+          <input type="number" class="form-control" id="s-every" min="1" max="10" value="4">
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="s-sound" checked>
+          <label class="form-check-label" for="s-sound">Zvuk při dokončení</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zrušit</button>
+        <button type="button" class="btn btn-primary" id="btn-save-settings">Uložit</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/timer.js' %}"></script>
 {% endblock %}
