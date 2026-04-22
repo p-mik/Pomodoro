@@ -1,5 +1,46 @@
 'use strict';
 
+// Výpočet Velikonoc (Anonymní Gregoriánský algoritmus)
+function getEaster(year) {
+  const a = year % 19, b = Math.floor(year / 100), c = year % 100;
+  const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4), k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(year, month - 1, day);
+}
+
+// Česká státní svátky (pevné datumy + Velký pátek + Velikonoční pondělí)
+function getCzechHolidays(year) {
+  const fixed = [
+    `${year}-01-01`, `${year}-05-01`, `${year}-05-08`,
+    `${year}-07-05`, `${year}-07-06`, `${year}-09-28`,
+    `${year}-10-28`, `${year}-11-17`,
+    `${year}-12-24`, `${year}-12-25`, `${year}-12-26`,
+  ];
+  const easter = getEaster(year);
+  const goodFriday = new Date(easter); goodFriday.setDate(easter.getDate() - 2);
+  const easterMon = new Date(easter); easterMon.setDate(easter.getDate() + 1);
+  return new Set([
+    ...fixed,
+    goodFriday.toISOString().slice(0, 10),
+    easterMon.toISOString().slice(0, 10),
+  ]);
+}
+
+function getDayColor(dateStr) {
+  const date = new Date(dateStr);
+  const dow = date.getDay(); // 0=ne, 6=so
+  const holidays = getCzechHolidays(date.getFullYear());
+  if (holidays.has(dateStr)) return 'rgba(108, 117, 125, 0.6)';  // svátek — šedá
+  if (dow === 0 || dow === 6) return 'rgba(255, 193, 7, 0.7)';   // víkend — žlutá
+  return 'rgba(220, 53, 69, 0.7)';                                // pracovní den — červená
+}
+
 function fmtTime(sec) {
   const h = Math.floor(sec / 3600);
   const m = Math.floor((sec % 3600) / 60);
@@ -38,19 +79,37 @@ async function loadDailyChart() {
     }
     d.data.forEach(row => { days[row.day] = Math.round(row.total_sec / 60); });
 
+    const dateKeys = Object.keys(days);
+
     new Chart(document.getElementById('chart-daily'), {
       type: 'bar',
       data: {
-        labels: Object.keys(days).map(fmtDate),
+        labels: dateKeys.map(fmtDate),
         datasets: [{
           label: 'Minut práce',
           data: Object.values(days),
-          backgroundColor: 'rgba(220, 53, 69, 0.7)',
+          backgroundColor: dateKeys.map(getDayColor),
           borderRadius: 4,
         }]
       },
       options: {
-        plugins: { legend: { display: false } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: ctx => {
+                const key = dateKeys[ctx[0].dataIndex];
+                const date = new Date(key);
+                const holidays = getCzechHolidays(date.getFullYear());
+                const dow = date.getDay();
+                const label = date.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' });
+                if (holidays.has(key)) return label + ' 🎉';
+                if (dow === 0 || dow === 6) return label + ' 🌿';
+                return label;
+              }
+            }
+          }
+        },
         scales: {
           y: { beginAtZero: true, title: { display: true, text: 'min' } },
           x: { ticks: { maxRotation: 45 } }
