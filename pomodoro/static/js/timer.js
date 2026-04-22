@@ -151,7 +151,8 @@ async function loadTags() {
     data.tags.forEach(t => {
       const opt = document.createElement('option');
       opt.value = t.id;
-      opt.textContent = t.nazev;
+      opt.textContent = `■ ${t.nazev}`;
+      opt.style.color = t.barva;
       select.appendChild(opt);
     });
   } catch (e) {}

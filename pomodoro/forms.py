@@ -11,7 +11,11 @@ class TagForm(forms.ModelForm):
         labels = {'nazev': 'Název', 'barva': 'Barva'}
         widgets = {
             'nazev': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Název tagu'}),
-            'barva': forms.TextInput(attrs={'class': 'form-control form-control-color', 'type': 'color'}),
+            'barva': forms.TextInput(attrs={
+                'class': 'form-control form-control-color',
+                'type': 'color',
+                'list': 'tag-color-palette',
+            }),
         }
 
 
