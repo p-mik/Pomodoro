@@ -16,7 +16,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /opt/pomodoro
-            git pull
+            git fetch origin main
+            git reset --hard origin/main
             docker compose build --no-cache web
             docker compose up -d
             docker compose exec -T web python manage.py migrate
